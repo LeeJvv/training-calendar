@@ -309,15 +309,37 @@ label textarea {
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
+.calendar-header,
 .calendar-day {
   border-right: 1px solid var(--line);
   border-top: 1px solid var(--line);
+}
+
+.calendar-header {
+  background: #edf6f0;
+  color: var(--forest);
+  font-size: 0.72rem;
+  font-weight: 900;
+  min-height: 32px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.calendar-header:nth-child(7n) {
+  border-right: 0;
+}
+
+.calendar-day {
   min-height: 72px;
   padding: 6px;
 }
 
 .calendar-day:nth-child(7n) {
   border-right: 0;
+}
+
+.calendar-blank {
+  background: #f2f6f3;
 }
 
 .calendar-day time {

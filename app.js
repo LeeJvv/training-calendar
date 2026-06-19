@@ -1,59 +1,60 @@
 const STORAGE_KEY = "comrades2027TrainingCalendarStateV1";
 const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const calendarHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const sourceCsv = `week,startDate,mon,tue,wed,thu,fri,sat,sun,weeklyKm,phaseNotes
-1,2026-06-15,Strength,8 km Easy,Strength,10 km,Strength,13 km Long Run/Race,5 km Recovery,36,Base Building
-2,2026-06-22,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building
-3,2026-06-29,Strength,8 km Easy,Strength,10 km,Strength,15 km Long Run/Race,5 km Recovery,38,Base Building
-4,2026-07-06,Strength,8 km Easy,Strength,10 km,Strength,11 km Long Run/Race,5 km Recovery,34,Base Building (Recovery Week)
-5,2026-07-13,Strength,8 km Easy,Strength,10 km,Strength,17 km Long Run/Race,5 km Recovery,40,Base Building
-6,2026-07-20,Strength,8 km Easy,Strength,10 km,Strength,18 km Long Run/Race,5 km Recovery,41,Base Building
-7,2026-07-27,Strength,8 km Easy,Strength,10 km,Strength,19 km Long Run/Race,5 km Recovery,42,Base Building
-8,2026-08-03,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building (Recovery Week)
-9,2026-08-10,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,Base Building
-10,2026-08-17,Strength,8 km Easy,Strength,10 km,Strength,22 km Long Run/Race,5 km Recovery,45,Base Building
-11,2026-08-24,Strength,8 km Easy,Strength,10 km,Strength,23 km Long Run/Race,5 km Recovery,46,Base Building
-12,2026-08-31,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,21.1 km Race Target <2h
-13,2026-09-07,Strength,10 km Easy,Strength,14 km,Strength,25 km Long Run/Race,8 km Recovery,57,Build Endurance
-14,2026-09-14,Strength,10 km Easy,Strength,14 km,Strength,26 km Long Run/Race,8 km Recovery,58,Build Endurance
-15,2026-09-21,Strength,10 km Easy,Strength,14 km,Strength,27 km Long Run/Race,8 km Recovery,59,Build Endurance
-16,2026-09-28,Strength,10 km Easy,Strength,14 km,Strength,19 km Long Run/Race,8 km Recovery,51,Build Endurance (Recovery Week)
-17,2026-10-05,Strength,10 km Easy,Strength,14 km,Strength,29 km Long Run/Race,8 km Recovery,61,Build Endurance
-18,2026-10-12,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,Build Endurance
-19,2026-10-19,Strength,10 km Easy,Strength,14 km,Strength,31 km Long Run/Race,8 km Recovery,63,Build Endurance
-20,2026-10-26,Strength,10 km Easy,Strength,14 km,Strength,22 km Long Run/Race,8 km Recovery,54,Build Endurance (Recovery Week)
-21,2026-11-02,Strength,10 km Easy,Strength,14 km,Strength,33 km Long Run/Race,8 km Recovery,65,Build Endurance
-22,2026-11-09,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
-23,2026-11-16,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
-24,2026-11-23,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,30 km Race
-25,2026-11-30,Strength,12 km Easy,Strength,16 km,Strength,31 km Long Run/Race,8 km Recovery,67,Marathon Preparation
-26,2026-12-07,Strength,12 km Easy,Strength,16 km,Strength,32 km Long Run/Race,8 km Recovery,68,Marathon Preparation
-27,2026-12-14,Strength,12 km Easy,Strength,16 km,Strength,33 km Long Run/Race,8 km Recovery,69,Marathon Preparation
-28,2026-12-21,Strength,12 km Easy,Strength,16 km,Strength,23 km Long Run/Race,8 km Recovery,59,Marathon Preparation (Recovery Week)
-29,2026-12-28,Strength,12 km Easy,Strength,16 km Hills,Strength,35 km Long Run/Race,8 km Recovery,71,Marathon Preparation
-30,2027-01-04,Strength,12 km Easy,Strength,16 km Hills,Strength,36 km Long Run/Race,8 km Recovery,72,Marathon Preparation
-31,2027-01-11,Strength,12 km Easy,Strength,16 km Hills,Strength,37 km Long Run/Race,8 km Recovery,73,Marathon Preparation
-32,2027-01-18,Strength,12 km Easy,Strength,16 km Hills,Strength,26 km Long Run/Race,8 km Recovery,62,Marathon Preparation (Recovery Week)
-33,2027-01-25,Strength,12 km Easy,Strength,16 km Hills,Strength,39 km Long Run/Race,8 km Recovery,75,Marathon Preparation
-34,2027-02-01,Strength,12 km Easy,Strength,16 km Hills,Strength,42 km Long Run/Race,8 km Recovery,78,First Marathon Target 4h30-4h50
-35,2027-02-08,Strength,12 km Easy,Strength,16 km Hills,Strength,41 km Long Run/Race,8 km Recovery,77,Marathon Preparation
-36,2027-02-15,Strength,12 km Easy,Strength,16 km Hills,Strength,29 km Long Run/Race,8 km Recovery,65,Marathon Preparation (Recovery Week)
-37,2027-02-22,Strength,14 km Easy,Strength,18 km Hills,Strength,37 km Long Run/Race,10 km Recovery,79,Comrades Specific
-38,2027-03-01,Strength,14 km Easy,Strength,18 km Hills,Strength,38 km Long Run/Race,10 km Recovery,80,Comrades Specific
-39,2027-03-08,Strength,14 km Easy,Strength,18 km Hills,Strength,39 km Long Run/Race,10 km Recovery,81,Comrades Specific
-40,2027-03-15,Strength,14 km Easy,Strength,18 km Hills,Strength,28 km Long Run/Race,10 km Recovery,70,Comrades Specific (Recovery Week)
-41,2027-03-22,Strength,14 km Easy,Strength,18 km Hills,Strength,41 km Long Run/Race,10 km Recovery,83,Comrades Specific
-42,2027-03-29,Strength,14 km Easy,Strength,18 km Hills,Strength,50 km Long Run/Race,10 km Recovery,92,Om Die Dam 50 km
-43,2027-04-05,Strength,14 km Easy,Strength,18 km Hills,Strength,43 km Long Run/Race,10 km Recovery,85,Comrades Specific
-44,2027-04-12,Strength,14 km Easy,Strength,18 km Hills,Strength,30 km Long Run/Race,10 km Recovery,72,Comrades Specific (Recovery Week)
-45,2027-04-19,Strength,14 km Easy,Strength,18 km Hills,Strength,45 km Long Run/Race,10 km Recovery,87,Comrades Specific
-46,2027-04-26,Strength,14 km Easy,Strength,18 km Hills,Strength,46 km Long Run/Race,10 km Recovery,88,Comrades Specific
-47,2027-05-03,Strength,14 km Easy,Strength,18 km Hills,Strength,42 km Long Run/Race,10 km Recovery,84,Cape Gate Vaal Marathon Qualifier
-48,2027-05-10,Strength,14 km Easy,Strength,18 km Hills,Strength,33 km Long Run/Race,10 km Recovery,75,Comrades Specific (Recovery Week)
-49,2027-05-17,Strength,10 km Easy,Strength,12 km,Strength,30 km Long Run/Race,5 km Recovery,57,Taper
-50,2027-05-24,Strength,10 km Easy,Strength,12 km,Strength,20 km Long Run/Race,5 km Recovery,47,Taper
-51,2027-05-31,Strength,10 km Easy,Strength,12 km,Strength,10 km Long Run/Race,5 km Recovery,37,Taper
-52,2027-06-07,Strength,10 km Easy,Strength,12 km,Strength,89 km Long Run/Race,5 km Recovery,116,COMRADES TARGET 10-11 HOURS`;
+1,2026-07-01,Strength,8 km Easy,Strength,10 km,Strength,13 km Long Run/Race,5 km Recovery,36,Base Building
+2,2026-07-08,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building
+3,2026-07-15,Strength,8 km Easy,Strength,10 km,Strength,15 km Long Run/Race,5 km Recovery,38,Base Building
+4,2026-07-22,Strength,8 km Easy,Strength,10 km,Strength,11 km Long Run/Race,5 km Recovery,34,Base Building (Recovery Week)
+5,2026-07-29,Strength,8 km Easy,Strength,10 km,Strength,17 km Long Run/Race,5 km Recovery,40,Base Building
+6,2026-08-05,Strength,8 km Easy,Strength,10 km,Strength,18 km Long Run/Race,5 km Recovery,41,Base Building
+7,2026-08-12,Strength,8 km Easy,Strength,10 km,Strength,19 km Long Run/Race,5 km Recovery,42,Base Building
+8,2026-08-19,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building (Recovery Week)
+9,2026-08-26,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,Base Building
+10,2026-09-02,Strength,8 km Easy,Strength,10 km,Strength,22 km Long Run/Race,5 km Recovery,45,Base Building
+11,2026-09-09,Strength,8 km Easy,Strength,10 km,Strength,23 km Long Run/Race,5 km Recovery,46,Base Building
+12,2026-09-16,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,21.1 km Race Target <2h
+13,2026-09-23,Strength,10 km Easy,Strength,14 km,Strength,25 km Long Run/Race,8 km Recovery,57,Build Endurance
+14,2026-09-30,Strength,10 km Easy,Strength,14 km,Strength,26 km Long Run/Race,8 km Recovery,58,Build Endurance
+15,2026-10-07,Strength,10 km Easy,Strength,14 km,Strength,27 km Long Run/Race,8 km Recovery,59,Build Endurance
+16,2026-10-14,Strength,10 km Easy,Strength,14 km,Strength,19 km Long Run/Race,8 km Recovery,51,Build Endurance (Recovery Week)
+17,2026-10-21,Strength,10 km Easy,Strength,14 km,Strength,29 km Long Run/Race,8 km Recovery,61,Build Endurance
+18,2026-10-28,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,Build Endurance
+19,2026-11-04,Strength,10 km Easy,Strength,14 km,Strength,31 km Long Run/Race,8 km Recovery,63,Build Endurance
+20,2026-11-11,Strength,10 km Easy,Strength,14 km,Strength,22 km Long Run/Race,8 km Recovery,54,Build Endurance (Recovery Week)
+21,2026-11-18,Strength,10 km Easy,Strength,14 km,Strength,33 km Long Run/Race,8 km Recovery,65,Build Endurance
+22,2026-11-25,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
+23,2026-12-02,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
+24,2026-12-09,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,30 km Race
+25,2026-12-16,Strength,12 km Easy,Strength,16 km,Strength,31 km Long Run/Race,8 km Recovery,67,Marathon Preparation
+26,2026-12-23,Strength,12 km Easy,Strength,16 km,Strength,32 km Long Run/Race,8 km Recovery,68,Marathon Preparation
+27,2026-12-30,Strength,12 km Easy,Strength,16 km,Strength,33 km Long Run/Race,8 km Recovery,69,Marathon Preparation
+28,2027-01-06,Strength,12 km Easy,Strength,16 km,Strength,23 km Long Run/Race,8 km Recovery,59,Marathon Preparation (Recovery Week)
+29,2027-01-13,Strength,12 km Easy,Strength,16 km Hills,Strength,35 km Long Run/Race,8 km Recovery,71,Marathon Preparation
+30,2027-01-20,Strength,12 km Easy,Strength,16 km Hills,Strength,36 km Long Run/Race,8 km Recovery,72,Marathon Preparation
+31,2027-01-27,Strength,12 km Easy,Strength,16 km Hills,Strength,37 km Long Run/Race,8 km Recovery,73,Marathon Preparation
+32,2027-02-03,Strength,12 km Easy,Strength,16 km Hills,Strength,26 km Long Run/Race,8 km Recovery,62,Marathon Preparation (Recovery Week)
+33,2027-02-10,Strength,12 km Easy,Strength,16 km Hills,Strength,39 km Long Run/Race,8 km Recovery,75,Marathon Preparation
+34,2027-02-17,Strength,12 km Easy,Strength,16 km Hills,Strength,42 km Long Run/Race,8 km Recovery,78,First Marathon Target 4h30-4h50
+35,2027-02-24,Strength,12 km Easy,Strength,16 km Hills,Strength,41 km Long Run/Race,8 km Recovery,77,Marathon Preparation
+36,2027-03-03,Strength,12 km Easy,Strength,16 km Hills,Strength,29 km Long Run/Race,8 km Recovery,65,Marathon Preparation (Recovery Week)
+37,2027-03-10,Strength,14 km Easy,Strength,18 km Hills,Strength,37 km Long Run/Race,10 km Recovery,79,Comrades Specific
+38,2027-03-17,Strength,14 km Easy,Strength,18 km Hills,Strength,38 km Long Run/Race,10 km Recovery,80,Comrades Specific
+39,2027-03-24,Strength,14 km Easy,Strength,18 km Hills,Strength,39 km Long Run/Race,10 km Recovery,81,Comrades Specific
+40,2027-03-31,Strength,14 km Easy,Strength,18 km Hills,Strength,28 km Long Run/Race,10 km Recovery,70,Comrades Specific (Recovery Week)
+41,2027-04-07,Strength,14 km Easy,Strength,18 km Hills,Strength,41 km Long Run/Race,10 km Recovery,83,Comrades Specific
+42,2027-04-14,Strength,14 km Easy,Strength,18 km Hills,Strength,50 km Long Run/Race,10 km Recovery,92,Om Die Dam 50 km
+43,2027-04-21,Strength,14 km Easy,Strength,18 km Hills,Strength,43 km Long Run/Race,10 km Recovery,85,Comrades Specific
+44,2027-04-28,Strength,14 km Easy,Strength,18 km Hills,Strength,30 km Long Run/Race,10 km Recovery,72,Comrades Specific (Recovery Week)
+45,2027-05-05,Strength,14 km Easy,Strength,18 km Hills,Strength,45 km Long Run/Race,10 km Recovery,87,Comrades Specific
+46,2027-05-12,Strength,14 km Easy,Strength,18 km Hills,Strength,46 km Long Run/Race,10 km Recovery,88,Comrades Specific
+47,2027-05-19,Strength,14 km Easy,Strength,18 km Hills,Strength,42 km Long Run/Race,10 km Recovery,84,Cape Gate Vaal Marathon Qualifier
+48,2027-05-26,Strength,14 km Easy,Strength,18 km Hills,Strength,33 km Long Run/Race,10 km Recovery,75,Comrades Specific (Recovery Week)
+49,2027-06-02,Strength,10 km Easy,Strength,12 km,Strength,30 km Long Run/Race,5 km Recovery,57,Taper
+50,2027-06-09,Strength,10 km Easy,Strength,12 km,Strength,20 km Long Run/Race,5 km Recovery,47,Taper
+51,2027-06-16,Strength,10 km Easy,Strength,12 km,Strength,10 km Long Run/Race,5 km Recovery,37,Taper
+52,2027-06-23,Strength,10 km Easy,Strength,12 km,Strength,89 km Long Run/Race,5 km Recovery,116,COMRADES TARGET 10-11 HOURS`;
 
 const state = {
   view: "week",
@@ -76,7 +77,7 @@ function parsePlan() {
       const planned = cols[index + 2];
       return {
         day,
-        label: dayLabels[index],
+        label: dayLabel(addDays(startDate, index)),
         date: addDays(startDate, index),
         planned,
         plannedKm: extractKm(planned),
@@ -264,6 +265,17 @@ function renderCalendar() {
     panel.className = "month-panel";
     panel.innerHTML = `<h3>${monthFormatter.format(localDate(`${month}-01`))}</h3><div class="calendar-grid"></div>`;
     const grid = panel.querySelector(".calendar-grid");
+    calendarHeaders.forEach((label) => {
+      const header = document.createElement("div");
+      header.className = "calendar-header";
+      header.textContent = label;
+      grid.append(header);
+    });
+    for (let index = 0; index < calendarOffset(`${month}-01`); index += 1) {
+      const blank = document.createElement("div");
+      blank.className = "calendar-day calendar-blank";
+      grid.append(blank);
+    }
     monthRows.forEach((row) => {
       const cell = document.createElement("div");
       cell.className = `calendar-day ${dayClass(row)}`;
@@ -421,6 +433,15 @@ function addDays(isoDate, days) {
 function localDate(isoDate) {
   const [year, month, day] = isoDate.split("-").map(Number);
   return new Date(year, month - 1, day);
+}
+
+function dayLabel(isoDate) {
+  return dayLabels[calendarOffset(isoDate)];
+}
+
+function calendarOffset(isoDate) {
+  const day = localDate(isoDate).getDay();
+  return day === 0 ? 6 : day - 1;
 }
 
 function stripTime(date) {
