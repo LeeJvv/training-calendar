@@ -1,0 +1,16 @@
+{
+  "name": "Comrades Training Calendar",
+  "short_name": "Training",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8faf7",
+  "theme_color": "#12312d",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
