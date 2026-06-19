@@ -1,62 +1,67 @@
-const STORAGE_KEY = "comrades2027TrainingCalendarStateV2";
+const STORAGE_KEY = "comrades2027TrainingCalendarStateV3";
 const LEGACY_STORAGE_KEY = "comrades2027TrainingCalendarStateV1";
 const SYNC_DEBOUNCE_MS = 1200;
 const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const calendarHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const sourceCsv = `week,startDate,mon,tue,wed,thu,fri,sat,sun,weeklyKm,phaseNotes
-1,2026-07-01,Strength,8 km Easy,Strength,10 km,Strength,13 km Long Run/Race,5 km Recovery,36,Base Building
-2,2026-07-08,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building
-3,2026-07-15,Strength,8 km Easy,Strength,10 km,Strength,15 km Long Run/Race,5 km Recovery,38,Base Building
-4,2026-07-22,Strength,8 km Easy,Strength,10 km,Strength,11 km Long Run/Race,5 km Recovery,34,Base Building (Recovery Week)
-5,2026-07-29,Strength,8 km Easy,Strength,10 km,Strength,17 km Long Run/Race,5 km Recovery,40,Base Building
-6,2026-08-05,Strength,8 km Easy,Strength,10 km,Strength,18 km Long Run/Race,5 km Recovery,41,Base Building
-7,2026-08-12,Strength,8 km Easy,Strength,10 km,Strength,19 km Long Run/Race,5 km Recovery,42,Base Building
-8,2026-08-19,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building (Recovery Week)
-9,2026-08-26,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,Base Building
-10,2026-09-02,Strength,8 km Easy,Strength,10 km,Strength,22 km Long Run/Race,5 km Recovery,45,Base Building
-11,2026-09-09,Strength,8 km Easy,Strength,10 km,Strength,23 km Long Run/Race,5 km Recovery,46,Base Building
-12,2026-09-16,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,21.1 km Race Target <2h
-13,2026-09-23,Strength,10 km Easy,Strength,14 km,Strength,25 km Long Run/Race,8 km Recovery,57,Build Endurance
-14,2026-09-30,Strength,10 km Easy,Strength,14 km,Strength,26 km Long Run/Race,8 km Recovery,58,Build Endurance
-15,2026-10-07,Strength,10 km Easy,Strength,14 km,Strength,27 km Long Run/Race,8 km Recovery,59,Build Endurance
-16,2026-10-14,Strength,10 km Easy,Strength,14 km,Strength,19 km Long Run/Race,8 km Recovery,51,Build Endurance (Recovery Week)
-17,2026-10-21,Strength,10 km Easy,Strength,14 km,Strength,29 km Long Run/Race,8 km Recovery,61,Build Endurance
-18,2026-10-28,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,Build Endurance
-19,2026-11-04,Strength,10 km Easy,Strength,14 km,Strength,31 km Long Run/Race,8 km Recovery,63,Build Endurance
-20,2026-11-11,Strength,10 km Easy,Strength,14 km,Strength,22 km Long Run/Race,8 km Recovery,54,Build Endurance (Recovery Week)
-21,2026-11-18,Strength,10 km Easy,Strength,14 km,Strength,33 km Long Run/Race,8 km Recovery,65,Build Endurance
-22,2026-11-25,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
-23,2026-12-02,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
-24,2026-12-09,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,30 km Race
-25,2026-12-16,Strength,12 km Easy,Strength,16 km,Strength,31 km Long Run/Race,8 km Recovery,67,Marathon Preparation
-26,2026-12-23,Strength,12 km Easy,Strength,16 km,Strength,32 km Long Run/Race,8 km Recovery,68,Marathon Preparation
-27,2026-12-30,Strength,12 km Easy,Strength,16 km,Strength,33 km Long Run/Race,8 km Recovery,69,Marathon Preparation
-28,2027-01-06,Strength,12 km Easy,Strength,16 km,Strength,23 km Long Run/Race,8 km Recovery,59,Marathon Preparation (Recovery Week)
-29,2027-01-13,Strength,12 km Easy,Strength,16 km Hills,Strength,35 km Long Run/Race,8 km Recovery,71,Marathon Preparation
-30,2027-01-20,Strength,12 km Easy,Strength,16 km Hills,Strength,36 km Long Run/Race,8 km Recovery,72,Marathon Preparation
-31,2027-01-27,Strength,12 km Easy,Strength,16 km Hills,Strength,37 km Long Run/Race,8 km Recovery,73,Marathon Preparation
-32,2027-02-03,Strength,12 km Easy,Strength,16 km Hills,Strength,26 km Long Run/Race,8 km Recovery,62,Marathon Preparation (Recovery Week)
-33,2027-02-10,Strength,12 km Easy,Strength,16 km Hills,Strength,39 km Long Run/Race,8 km Recovery,75,Marathon Preparation
-34,2027-02-17,Strength,12 km Easy,Strength,16 km Hills,Strength,42 km Long Run/Race,8 km Recovery,78,First Marathon Target 4h30-4h50
-35,2027-02-24,Strength,12 km Easy,Strength,16 km Hills,Strength,41 km Long Run/Race,8 km Recovery,77,Marathon Preparation
-36,2027-03-03,Strength,12 km Easy,Strength,16 km Hills,Strength,29 km Long Run/Race,8 km Recovery,65,Marathon Preparation (Recovery Week)
-37,2027-03-10,Strength,14 km Easy,Strength,18 km Hills,Strength,37 km Long Run/Race,10 km Recovery,79,Comrades Specific
-38,2027-03-17,Strength,14 km Easy,Strength,18 km Hills,Strength,38 km Long Run/Race,10 km Recovery,80,Comrades Specific
-39,2027-03-24,Strength,14 km Easy,Strength,18 km Hills,Strength,39 km Long Run/Race,10 km Recovery,81,Comrades Specific
-40,2027-03-31,Strength,14 km Easy,Strength,18 km Hills,Strength,28 km Long Run/Race,10 km Recovery,70,Comrades Specific (Recovery Week)
-41,2027-04-07,Strength,14 km Easy,Strength,18 km Hills,Strength,41 km Long Run/Race,10 km Recovery,83,Comrades Specific
-42,2027-04-14,Strength,14 km Easy,Strength,18 km Hills,Strength,50 km Long Run/Race,10 km Recovery,92,Om Die Dam 50 km
-43,2027-04-21,Strength,14 km Easy,Strength,18 km Hills,Strength,43 km Long Run/Race,10 km Recovery,85,Comrades Specific
-44,2027-04-28,Strength,14 km Easy,Strength,18 km Hills,Strength,30 km Long Run/Race,10 km Recovery,72,Comrades Specific (Recovery Week)
-45,2027-05-05,Strength,14 km Easy,Strength,18 km Hills,Strength,45 km Long Run/Race,10 km Recovery,87,Comrades Specific
-46,2027-05-12,Strength,14 km Easy,Strength,18 km Hills,Strength,46 km Long Run/Race,10 km Recovery,88,Comrades Specific
-47,2027-05-19,Strength,14 km Easy,Strength,18 km Hills,Strength,42 km Long Run/Race,10 km Recovery,84,Cape Gate Vaal Marathon Qualifier
-48,2027-05-26,Strength,14 km Easy,Strength,18 km Hills,Strength,33 km Long Run/Race,10 km Recovery,75,Comrades Specific (Recovery Week)
-49,2027-06-02,Strength,10 km Easy,Strength,12 km,Strength,30 km Long Run/Race,5 km Recovery,57,Taper
-50,2027-06-09,Strength,10 km Easy,Strength,12 km,Strength,20 km Long Run/Race,5 km Recovery,47,Taper
-51,2027-06-16,Strength,10 km Easy,Strength,12 km,Strength,10 km Long Run/Race,5 km Recovery,37,Taper
-52,2027-06-23,Strength,10 km Easy,Strength,12 km,Strength,89 km Long Run/Race,5 km Recovery,116,COMRADES TARGET 10-11 HOURS`;
+4,2026-07-06,Strength,8 km Easy,Strength,10 km,Strength,11 km Long Run/Race,5 km Recovery,34,Base Building (Recovery Week)
+5,2026-07-13,Strength,8 km Easy,Strength,10 km,Strength,17 km Long Run/Race,5 km Recovery,40,Base Building
+6,2026-07-20,Strength,8 km Easy,Strength,10 km,Strength,18 km Long Run/Race,5 km Recovery,41,Base Building
+7,2026-07-27,Strength,8 km Easy,Strength,10 km,Strength,19 km Long Run/Race,5 km Recovery,42,Base Building
+8,2026-08-03,Strength,8 km Easy,Strength,10 km,Strength,14 km Long Run/Race,5 km Recovery,37,Base Building (Recovery Week)
+9,2026-08-10,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,Base Building
+10,2026-08-17,Strength,8 km Easy,Strength,10 km,Strength,22 km Long Run/Race,5 km Recovery,45,Base Building
+11,2026-08-24,Strength,8 km Easy,Strength,10 km,Strength,23 km Long Run/Race,5 km Recovery,46,Base Building
+12,2026-08-31,Strength,8 km Easy,Strength,10 km,Strength,21 km Long Run/Race,5 km Recovery,44,21.1 km Race Target <2h
+13,2026-09-07,Strength,10 km Easy,Strength,14 km,Strength,25 km Long Run/Race,8 km Recovery,57,Build Endurance
+14,2026-09-14,Strength,10 km Easy,Strength,14 km,Strength,26 km Long Run/Race,8 km Recovery,58,Build Endurance
+15,2026-09-21,Strength,10 km Easy,Strength,14 km,Strength,27 km Long Run/Race,8 km Recovery,59,Build Endurance
+16,2026-09-28,Strength,10 km Easy,Strength,14 km,Strength,19 km Long Run/Race,8 km Recovery,51,Build Endurance (Recovery Week)
+17,2026-10-05,Strength,10 km Easy,Strength,14 km,Strength,29 km Long Run/Race,8 km Recovery,61,Build Endurance
+18,2026-10-12,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,Build Endurance
+19,2026-10-19,Strength,10 km Easy,Strength,14 km,Strength,31 km Long Run/Race,8 km Recovery,63,Build Endurance
+20,2026-10-26,Strength,10 km Easy,Strength,14 km,Strength,22 km Long Run/Race,8 km Recovery,54,Build Endurance (Recovery Week)
+21,2026-11-02,Strength,10 km Easy,Strength,14 km,Strength,33 km Long Run/Race,8 km Recovery,65,Build Endurance
+22,2026-11-09,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
+23,2026-11-16,Strength,10 km Easy,Strength,14 km,Strength,34 km Long Run/Race,8 km Recovery,66,Build Endurance
+24,2026-11-23,Strength,10 km Easy,Strength,14 km,Strength,30 km Long Run/Race,8 km Recovery,62,30 km Race
+25,2026-11-30,Strength,12 km Easy,Strength,16 km,Strength,31 km Long Run/Race,8 km Recovery,67,Marathon Preparation
+26,2026-12-07,Strength,12 km Easy,Strength,16 km,Strength,32 km Long Run/Race,8 km Recovery,68,Marathon Preparation
+27,2026-12-14,Strength,12 km Easy,Strength,16 km,Strength,33 km Long Run/Race,8 km Recovery,69,Marathon Preparation
+28,2026-12-21,Strength,12 km Easy,Strength,16 km,Strength,23 km Long Run/Race,8 km Recovery,59,Marathon Preparation (Recovery Week)
+29,2026-12-28,Strength,12 km Easy,Strength,16 km Hills,Strength,35 km Long Run/Race,8 km Recovery,71,Marathon Preparation
+30,2027-01-04,Strength,12 km Easy,Strength,16 km Hills,Strength,36 km Long Run/Race,8 km Recovery,72,Marathon Preparation
+31,2027-01-11,Strength,12 km Easy,Strength,16 km Hills,Strength,37 km Long Run/Race,8 km Recovery,73,Marathon Preparation
+32,2027-01-18,Strength,12 km Easy,Strength,16 km Hills,Strength,26 km Long Run/Race,8 km Recovery,62,Marathon Preparation (Recovery Week)
+33,2027-01-25,Strength,12 km Easy,Strength,16 km Hills,Strength,39 km Long Run/Race,8 km Recovery,75,Marathon Preparation
+34,2027-02-01,Strength,12 km Easy,Strength,16 km Hills,Strength,42 km Long Run/Race,8 km Recovery,78,First Marathon Target 4h30-4h50
+35,2027-02-08,Strength,12 km Easy,Strength,16 km Hills,Strength,41 km Long Run/Race,8 km Recovery,77,Marathon Preparation
+36,2027-02-15,Strength,12 km Easy,Strength,16 km Hills,Strength,29 km Long Run/Race,8 km Recovery,65,Marathon Preparation (Recovery Week)
+37,2027-02-22,Strength,14 km Easy,Strength,18 km Hills,Strength,37 km Long Run/Race,10 km Recovery,79,Comrades Specific
+38,2027-03-01,Strength,14 km Easy,Strength,18 km Hills,Strength,38 km Long Run/Race,10 km Recovery,80,Comrades Specific
+39,2027-03-08,Strength,14 km Easy,Strength,18 km Hills,Strength,39 km Long Run/Race,10 km Recovery,81,Comrades Specific
+40,2027-03-15,Strength,14 km Easy,Strength,18 km Hills,Strength,28 km Long Run/Race,10 km Recovery,70,Comrades Specific (Recovery Week)
+41,2027-03-22,Strength,14 km Easy,Strength,18 km Hills,Strength,41 km Long Run/Race,10 km Recovery,83,Comrades Specific
+42,2027-03-29,Strength,14 km Easy,Strength,18 km Hills,Strength,50 km Long Run/Race,10 km Recovery,92,Om Die Dam 50 km
+43,2027-04-05,Strength,14 km Easy,Strength,18 km Hills,Strength,43 km Long Run/Race,10 km Recovery,85,Comrades Specific
+44,2027-04-12,Strength,14 km Easy,Strength,18 km Hills,Strength,30 km Long Run/Race,10 km Recovery,72,Comrades Specific (Recovery Week)
+45,2027-04-19,Strength,14 km Easy,Strength,18 km Hills,Strength,45 km Long Run/Race,10 km Recovery,87,Comrades Specific
+46,2027-04-26,Strength,14 km Easy,Strength,18 km Hills,Strength,46 km Long Run/Race,10 km Recovery,88,Comrades Specific
+47,2027-05-03,Strength,14 km Easy,Strength,18 km Hills,Strength,42 km Long Run/Race,10 km Recovery,84,Cape Gate Vaal Marathon Qualifier
+48,2027-05-10,Strength,14 km Easy,Strength,18 km Hills,Strength,33 km Long Run/Race,10 km Recovery,75,Comrades Specific (Recovery Week)
+49,2027-05-17,Strength,10 km Easy,Strength,12 km,Strength,30 km Long Run/Race,5 km Recovery,57,Taper
+50,2027-05-24,Strength,10 km Easy,Strength,12 km,Strength,20 km Long Run/Race,5 km Recovery,47,Taper
+51,2027-05-31,Strength,10 km Easy,Strength,12 km,Strength,10 km Long Run/Race,5 km Recovery,37,Taper
+52,2027-06-07,Strength,10 km Easy,Strength,12 km,Strength,89 km Long Run/Race,5 km Recovery,116,COMRADES TARGET 10-11 HOURS`;
+const officeCsv = `month,dateRange,days
+June,01/06/2026 - 03/07/2026,
+July,03/07/2026 - 31/07/2026,Monday and Thursday
+August,03/08/2026 - 04/09/2026,Monday and Friday
+September,07/09/2026 - 02/10/2026,Monday and Thursday
+October,05/10/2026 - 30/10/2026,Monday and Tuesday
+November,02/11/2026 - 04/12/2026,Monday and Friday
+December,07/12/2026 - 24/12/2026,Monday and Tuesday`;
 
 const state = {
   view: "week",
@@ -101,7 +106,45 @@ function parsePlan() {
   });
 }
 
+function parseOfficeDays() {
+  const dayLookup = {
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+    sunday: 0,
+  };
+  const markers = {};
+
+  officeCsv.trim().split("\n").slice(1).forEach((line) => {
+    const cols = line.split(",");
+    const dateRange = cols[1];
+    const daysText = (cols.slice(2).join(",") || "").toLowerCase();
+    const officeWeekdays = Object.keys(dayLookup)
+      .filter((name) => daysText.includes(name))
+      .map((name) => dayLookup[name]);
+
+    if (!dateRange || !officeWeekdays.length) return;
+
+    const [startText, endText] = dateRange.split(" - ");
+    const current = parseSlashDate(startText);
+    const end = parseSlashDate(endText);
+
+    while (current <= end) {
+      if (officeWeekdays.includes(current.getDay())) {
+        markers[isoFromLocalDate(current)] = "Office";
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  });
+
+  return markers;
+}
+
 const plan = parsePlan();
+const officeDays = parseOfficeDays();
 
 function init() {
   cacheElements();
@@ -155,12 +198,14 @@ function wireEvents() {
   });
 
   elements.prevWeek.addEventListener("click", () => {
-    state.selectedWeek = Math.max(1, state.selectedWeek - 1);
+    const index = getSelectedWeekIndex();
+    state.selectedWeek = plan[Math.max(0, index - 1)].week;
     render();
   });
 
   elements.nextWeek.addEventListener("click", () => {
-    state.selectedWeek = Math.min(plan.length, state.selectedWeek + 1);
+    const index = getSelectedWeekIndex();
+    state.selectedWeek = plan[Math.min(plan.length - 1, index + 1)].week;
     render();
   });
 
@@ -179,7 +224,7 @@ function wireEvents() {
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("comrades2027TrainingCalendarStateV2") || localStorage.getItem(LEGACY_STORAGE_KEY);
   state.deviceId = getDeviceId();
   if (!saved) {
     state.selectedWeek = getCurrentWeekNumber();
@@ -188,7 +233,7 @@ function loadState() {
   try {
     const parsed = JSON.parse(saved);
     state.entries = normalizeEntries(parsed.entries || {});
-    state.selectedWeek = parsed.selectedWeek || getCurrentWeekNumber();
+    state.selectedWeek = plan.some((week) => week.week === parsed.selectedWeek) ? parsed.selectedWeek : getCurrentWeekNumber();
     state.syncUrl = parsed.syncUrl || "";
     state.syncSecret = parsed.syncSecret || "";
     state.lastSyncAt = parsed.lastSyncAt || "";
@@ -271,6 +316,12 @@ function renderDayCard(row) {
   const node = document.getElementById("dayTemplate").content.firstElementChild.cloneNode(true);
   node.querySelector(".day-name").textContent = `${row.label} - Week ${row.week}`;
   node.querySelector(".day-date").textContent = formatDate(row.date);
+  if (row.officeDay) {
+    const badge = document.createElement("span");
+    badge.className = "office-badge";
+    badge.textContent = "Office";
+    node.querySelector(".day-head").append(badge);
+  }
   node.querySelector(".planned-text").value = row.planned;
   node.querySelector(".planned-km").value = blankZero(row.plannedKm);
   node.querySelector(".actual-km").value = blankZero(row.actualKm);
@@ -307,7 +358,7 @@ function renderCalendar() {
     }
     monthRows.forEach((row) => {
       const cell = document.createElement("div");
-      cell.className = `calendar-day ${dayClass(row)}`;
+      cell.className = `calendar-day ${dayClasses(row).join(" ")}`;
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = `${row.planned}${row.actualKm ? ` - ${row.actualKm} km` : ""}`;
@@ -317,6 +368,12 @@ function renderCalendar() {
         render();
       });
       cell.innerHTML = `<time>${localDate(row.date).getDate()}</time>`;
+      if (row.officeDay) {
+        const badge = document.createElement("span");
+        badge.className = "office-badge calendar-office-badge";
+        badge.textContent = "Office";
+        cell.append(badge);
+      }
       cell.append(button);
       grid.append(cell);
     });
@@ -364,20 +421,22 @@ function filteredRows() {
   const query = state.search;
   if (!query) return allRows();
   return allRows().filter((row) => {
-    return [row.week, row.date, row.planned, row.phaseNotes, row.notes].join(" ").toLowerCase().includes(query);
+    return [row.week, row.date, row.planned, row.phaseNotes, row.notes, row.officeDay ? "office" : ""].join(" ").toLowerCase().includes(query);
   });
 }
 
 function mergedSession(weekNumber, session) {
   const id = `${weekNumber}-${session.day}`;
   const overrides = state.entries[id] || {};
-  const week = plan[weekNumber - 1];
+  const week = plan.find((item) => item.week === weekNumber) || plan[0];
   return {
     ...session,
     ...overrides,
     id,
     week: weekNumber,
     phaseNotes: week.phaseNotes,
+    officeDay: Boolean(officeDays[session.date]),
+    officeLabel: officeDays[session.date] || "",
     actualKm: toNumber(overrides.actualKm),
     plannedKm: overrides.plannedKm === undefined ? session.plannedKm : toNumber(overrides.plannedKm),
     notes: overrides.notes || "",
@@ -386,11 +445,12 @@ function mergedSession(weekNumber, session) {
 }
 
 function exportCsv() {
-  const header = ["date", "week", "day", "planned", "plannedKm", "actualKm", "varianceKm", "done", "notes", "phase"];
+  const header = ["date", "week", "day", "officeDay", "planned", "plannedKm", "actualKm", "varianceKm", "done", "notes", "phase"];
   const lines = [header, ...allRows().map((row) => [
     row.date,
     row.week,
     row.label,
+    row.officeDay ? "yes" : "no",
     row.planned,
     row.plannedKm,
     row.actualKm,
@@ -532,10 +592,17 @@ function mergeEntries(localEntries, cloudEntries) {
 }
 
 function normalizeEntries(entries) {
-  return Object.fromEntries(Object.entries(entries).map(([id, entry]) => [
-    id,
-    { ...entry, updatedAt: entry.updatedAt || new Date(0).toISOString() },
-  ]));
+  const validIds = validEntryIds();
+  return Object.fromEntries(Object.entries(entries)
+    .filter(([id]) => validIds.has(id))
+    .map(([id, entry]) => [
+      id,
+      { ...entry, updatedAt: entry.updatedAt || new Date(0).toISOString() },
+    ]));
+}
+
+function validEntryIds() {
+  return new Set(plan.flatMap((week) => week.sessions.map((session) => `${week.week}-${session.day}`)));
 }
 
 function entryTime(entry) {
@@ -592,7 +659,12 @@ function download(filename, text, type) {
 }
 
 function getSelectedWeek() {
-  return plan[state.selectedWeek - 1] || plan[0];
+  return plan.find((week) => week.week === state.selectedWeek) || plan[0];
+}
+
+function getSelectedWeekIndex() {
+  const index = plan.findIndex((week) => week.week === state.selectedWeek);
+  return index >= 0 ? index : 0;
 }
 
 function getCurrentWeekNumber() {
@@ -602,7 +674,7 @@ function getCurrentWeekNumber() {
     const end = localDate(addDays(week.startDate, 6));
     return today >= start && today <= end;
   });
-  return found ? found.week : 1;
+  return found ? found.week : plan[0].week;
 }
 
 function addDays(isoDate, days) {
@@ -613,6 +685,11 @@ function addDays(isoDate, days) {
 
 function localDate(isoDate) {
   const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function parseSlashDate(value) {
+  const [day, month, year] = value.split("/").map(Number);
   return new Date(year, month - 1, day);
 }
 
@@ -671,12 +748,14 @@ function groupBy(rows, keyFn) {
   }, {});
 }
 
-function dayClass(row) {
-  if (row.done) return "done";
-  if (row.actualKm === 0 && row.plannedKm > 0 && localDate(row.date) < stripTime(new Date())) return "missed";
-  if (/race|target|comrades|dam|qualifier/i.test(row.phaseNotes) || /race/i.test(row.planned)) return "race";
-  if (/recovery/i.test(row.planned)) return "recovery";
-  return "";
+function dayClasses(row) {
+  const classes = [];
+  if (row.done) classes.push("done");
+  if (row.actualKm === 0 && row.plannedKm > 0 && localDate(row.date) < stripTime(new Date())) classes.push("missed");
+  if (/race|target|comrades|dam|qualifier/i.test(row.phaseNotes) || /race/i.test(row.planned)) classes.push("race");
+  if (/recovery/i.test(row.planned)) classes.push("recovery");
+  if (row.officeDay) classes.push("office-day");
+  return classes;
 }
 
 function csvCell(value) {
@@ -692,7 +771,7 @@ function escapeHtml(text) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js?v=sync1").then((registration) => registration.update()).catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=revised1").then((registration) => registration.update()).catch(() => {});
   }
 }
 
