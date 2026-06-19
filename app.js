@@ -1,4 +1,4 @@
-const STORAGE_KEY = "comrades2027TrainingCalendarStateV3";
+const STORAGE_KEY = "comrades2027TrainingCalendarStateV4";
 const LEGACY_STORAGE_KEY = "comrades2027TrainingCalendarStateV1";
 const SYNC_DEBOUNCE_MS = 1200;
 const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -224,7 +224,7 @@ function wireEvents() {
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("comrades2027TrainingCalendarStateV2") || localStorage.getItem(LEGACY_STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("comrades2027TrainingCalendarStateV3") || localStorage.getItem("comrades2027TrainingCalendarStateV2") || localStorage.getItem(LEGACY_STORAGE_KEY);
   state.deviceId = getDeviceId();
   if (!saved) {
     state.selectedWeek = getCurrentWeekNumber();
@@ -237,6 +237,7 @@ function loadState() {
     state.syncUrl = parsed.syncUrl || "";
     state.syncSecret = parsed.syncSecret || "";
     state.lastSyncAt = parsed.lastSyncAt || "";
+    saveState();
   } catch {
     state.selectedWeek = getCurrentWeekNumber();
   }
@@ -328,8 +329,8 @@ function renderDayCard(row) {
   node.querySelector(".notes").value = row.notes;
   node.querySelector(".done-toggle input").checked = row.done;
 
-  node.querySelector(".planned-text").addEventListener("change", (event) => updateEntry(row.id, { planned: event.target.value }));
-  node.querySelector(".planned-km").addEventListener("change", (event) => updateEntry(row.id, { plannedKm: toNumber(event.target.value) }));
+  node.querySelector(".planned-text").addEventListener("change", (event) => updateEntry(row.id, { planned: event.target.value, allowPlanOverride: true }));
+  node.querySelector(".planned-km").addEventListener("change", (event) => updateEntry(row.id, { plannedKm: toNumber(event.target.value), allowPlanOverride: true }));
   node.querySelector(".actual-km").addEventListener("change", (event) => updateEntry(row.id, { actualKm: toNumber(event.target.value) }));
   node.querySelector(".notes").addEventListener("change", (event) => updateEntry(row.id, { notes: event.target.value }));
   node.querySelector(".done-toggle input").addEventListener("change", (event) => updateEntry(row.id, { done: event.target.checked }));
@@ -448,7 +449,7 @@ function monthDates(month) {
 
 function mergedSession(weekNumber, session) {
   const id = `${weekNumber}-${session.day}`;
-  const overrides = state.entries[id] || {};
+  const overrides = sanitizeEntry(id, state.entries[id] || {});
   const week = plan.find((item) => item.week === weekNumber) || plan[0];
   return {
     ...session,
@@ -618,8 +619,25 @@ function normalizeEntries(entries) {
     .filter(([id]) => validIds.has(id))
     .map(([id, entry]) => [
       id,
-      { ...entry, updatedAt: entry.updatedAt || new Date(0).toISOString() },
+      sanitizeEntry(id, { ...entry, updatedAt: entry.updatedAt || new Date(0).toISOString() }),
     ]));
+}
+
+function sanitizeEntry(id, entry) {
+  const clean = { ...entry };
+  const source = sourceSessionById(id);
+  if (!source || !clean.allowPlanOverride || /office\s*day|office/i.test(String(clean.planned || ""))) {
+    delete clean.planned;
+    delete clean.plannedKm;
+    delete clean.allowPlanOverride;
+  }
+  return clean;
+}
+
+function sourceSessionById(id) {
+  const [weekText, day] = id.split("-");
+  const week = plan.find((item) => item.week === Number(weekText));
+  return week ? week.sessions.find((session) => session.day === day) : null;
 }
 
 function validEntryIds() {
@@ -792,7 +810,7 @@ function escapeHtml(text) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js?v=revised2").then((registration) => registration.update()).catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=revised3").then((registration) => registration.update()).catch(() => {});
   }
 }
 
