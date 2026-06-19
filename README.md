@@ -11,6 +11,7 @@ Mobile-friendly static training calendar for the 2026-2027 Comrades plan.
 - Local-first storage in the browser.
 - Export CSV for actual vs planned reporting.
 - Export and restore JSON backups.
+- Optional Google Sheets sync through the included Apps Script backend.
 - Installable on iPhone through Safari Add to Home Screen.
 
 ## iPhone use
@@ -18,3 +19,5 @@ Mobile-friendly static training calendar for the 2026-2027 Comrades plan.
 Open the GitHub Pages link in Safari, then use Share -> Add to Home Screen.
 
 Changes are saved on the device. Use Backup before changing phones or browsers.
+
+For automatic sync between iPhone and desktop, follow `SYNC_SETUP.md`.

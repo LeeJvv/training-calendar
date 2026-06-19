@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-title" content="Training">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Comrades Training Calendar</title>
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.webmanifest?v=sync1">
+    <link rel="stylesheet" href="styles.css?v=sync1">
   </head>
   <body>
     <div class="app-shell">
@@ -48,6 +48,7 @@
             <button class="active" data-view="week" role="tab" aria-selected="true">Week</button>
             <button data-view="calendar" role="tab" aria-selected="false">Calendar</button>
             <button data-view="log" role="tab" aria-selected="false">Log</button>
+            <button data-view="sync" role="tab" aria-selected="false">Sync</button>
           </div>
           <label class="search-box">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/></svg>
@@ -71,6 +72,22 @@
         <section id="weekView" class="view-panel"></section>
         <section id="calendarView" class="view-panel hidden"></section>
         <section id="logView" class="view-panel hidden"></section>
+        <section id="syncView" class="view-panel hidden">
+          <article class="sync-panel">
+            <div>
+              <p class="meta-label">Google Sheets Sync</p>
+              <h2>Sync Settings</h2>
+            </div>
+            <label>Apps Script URL<input id="syncUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec"></label>
+            <label>Sync password<input id="syncSecret" type="password" autocomplete="off"></label>
+            <div class="sync-actions">
+              <button id="saveSync">Save</button>
+              <button id="pullSync">Pull</button>
+              <button id="pushSync">Push</button>
+            </div>
+            <p id="syncStatus" class="sync-status">Not connected</p>
+          </article>
+        </section>
       </main>
 
       <nav class="bottom-actions" aria-label="Data actions">
@@ -111,6 +128,6 @@
       </article>
     </template>
 
-    <script src="app.js" defer></script>
+    <script src="app.js?v=sync1" defer></script>
   </body>
 </html>

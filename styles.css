@@ -143,7 +143,7 @@ label,
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   padding: 3px;
 }
 
@@ -229,7 +229,8 @@ label,
 
 .day-card,
 .log-row,
-.month-panel {
+.month-panel,
+.sync-panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -380,6 +381,43 @@ label textarea {
 
 .log-row {
   padding: 12px;
+}
+
+.sync-panel {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  padding: 14px;
+}
+
+.sync-panel h2 {
+  font-size: 1.15rem;
+  margin: 2px 0 0;
+}
+
+.sync-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.sync-actions button {
+  background: var(--forest);
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  font-weight: 850;
+  min-height: 42px;
+}
+
+.sync-status {
+  background: #edf6f0;
+  border-radius: 8px;
+  color: var(--forest);
+  font-size: 0.84rem;
+  font-weight: 800;
+  margin: 0;
+  padding: 10px;
 }
 
 .log-row strong {

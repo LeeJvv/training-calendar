@@ -1,4 +1,6 @@
-const STORAGE_KEY = "comrades2027TrainingCalendarStateV1";
+const STORAGE_KEY = "comrades2027TrainingCalendarStateV2";
+const LEGACY_STORAGE_KEY = "comrades2027TrainingCalendarStateV1";
+const SYNC_DEBOUNCE_MS = 1200;
 const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const calendarHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -61,11 +63,17 @@ const state = {
   selectedWeek: 1,
   search: "",
   entries: {},
+  syncUrl: "",
+  syncSecret: "",
+  lastSyncAt: "",
+  deviceId: "",
 };
 
 const elements = {};
 const dateFormatter = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short" });
 const monthFormatter = new Intl.DateTimeFormat("en-ZA", { month: "long", year: "numeric" });
+let syncTimer = null;
+let syncInFlight = false;
 
 function parsePlan() {
   return sourceCsv.trim().split("\n").slice(1).map((line) => {
@@ -118,6 +126,13 @@ function cacheElements() {
     "weekView",
     "calendarView",
     "logView",
+    "syncView",
+    "syncUrl",
+    "syncSecret",
+    "saveSync",
+    "pullSync",
+    "pushSync",
+    "syncStatus",
     "exportCsv",
     "exportJson",
     "importJson",
@@ -158,18 +173,25 @@ function wireEvents() {
   elements.exportCsv.addEventListener("click", exportCsv);
   elements.exportJson.addEventListener("click", exportJson);
   elements.importJson.addEventListener("change", importJson);
+  elements.saveSync.addEventListener("click", saveSyncSettings);
+  elements.pullSync.addEventListener("click", () => pullSync(true));
+  elements.pushSync.addEventListener("click", () => pushSync(true));
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+  state.deviceId = getDeviceId();
   if (!saved) {
     state.selectedWeek = getCurrentWeekNumber();
     return;
   }
   try {
     const parsed = JSON.parse(saved);
-    state.entries = parsed.entries || {};
+    state.entries = normalizeEntries(parsed.entries || {});
     state.selectedWeek = parsed.selectedWeek || getCurrentWeekNumber();
+    state.syncUrl = parsed.syncUrl || "";
+    state.syncSecret = parsed.syncSecret || "";
+    state.lastSyncAt = parsed.lastSyncAt || "";
   } catch {
     state.selectedWeek = getCurrentWeekNumber();
   }
@@ -179,6 +201,10 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     entries: state.entries,
     selectedWeek: state.selectedWeek,
+    syncUrl: state.syncUrl,
+    syncSecret: state.syncSecret,
+    lastSyncAt: state.lastSyncAt,
+    deviceId: state.deviceId,
     updatedAt: new Date().toISOString(),
   }));
 }
@@ -193,8 +219,10 @@ function render() {
   elements.weekView.classList.toggle("hidden", state.view !== "week");
   elements.calendarView.classList.toggle("hidden", state.view !== "calendar");
   elements.logView.classList.toggle("hidden", state.view !== "log");
+  elements.syncView.classList.toggle("hidden", state.view !== "sync");
   renderSummary();
   renderHeader();
+  renderSyncSettings();
   renderCurrentView();
 }
 
@@ -208,6 +236,7 @@ function renderCurrentView() {
   if (state.view === "week") renderWeek();
   if (state.view === "calendar") renderCalendar();
   if (state.view === "log") renderLog();
+  if (state.view === "sync") renderSyncSettings();
 }
 
 function renderSummary() {
@@ -320,10 +349,11 @@ function renderLog() {
 }
 
 function updateEntry(id, patch) {
-  state.entries[id] = { ...(state.entries[id] || {}), ...patch };
+  state.entries[id] = { ...(state.entries[id] || {}), ...patch, updatedAt: new Date().toISOString() };
   saveState();
   renderSummary();
   renderCurrentView();
+  schedulePushSync();
 }
 
 function allRows() {
@@ -378,6 +408,7 @@ function exportJson() {
     version: 1,
     exportedAt: new Date().toISOString(),
     entries: state.entries,
+    syncUrl: state.syncUrl,
   }, null, 2), "application/json");
 }
 
@@ -388,15 +419,165 @@ function importJson(event) {
   reader.addEventListener("load", () => {
     try {
       const imported = JSON.parse(reader.result);
-      state.entries = imported.entries || {};
+      state.entries = normalizeEntries(imported.entries || {});
       saveState();
       render();
+      schedulePushSync();
     } catch {
       alert("That backup file could not be restored.");
     }
   });
   reader.readAsText(file);
   event.target.value = "";
+}
+
+function renderSyncSettings() {
+  elements.syncUrl.value = state.syncUrl;
+  elements.syncSecret.value = state.syncSecret;
+  setSyncStatus(state.syncUrl ? `Connected. Last sync: ${state.lastSyncAt ? formatSyncTime(state.lastSyncAt) : "not yet"}` : "Not connected");
+}
+
+function saveSyncSettings() {
+  state.syncUrl = normalizeSyncUrl(elements.syncUrl.value);
+  state.syncSecret = elements.syncSecret.value.trim();
+  saveState();
+  renderSyncSettings();
+  if (state.syncUrl && state.syncSecret) {
+    pullSync(true);
+  }
+}
+
+function schedulePushSync() {
+  if (!canSync()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => pushSync(false), SYNC_DEBOUNCE_MS);
+}
+
+async function pushSync(manual) {
+  if (!canSync() || syncInFlight) {
+    if (manual) setSyncStatus("Add the Apps Script URL and sync password first.");
+    return;
+  }
+  syncInFlight = true;
+  setSyncStatus("Pushing changes to Google Sheets...");
+  const payload = JSON.stringify({
+    app: "Comrades Training Calendar",
+    version: 2,
+    deviceId: state.deviceId,
+    updatedAt: new Date().toISOString(),
+    entries: state.entries,
+  });
+
+  try {
+    await fetch(state.syncUrl, {
+      method: "POST",
+      mode: "no-cors",
+      body: new URLSearchParams({
+        action: "push",
+        secret: state.syncSecret,
+        payload,
+      }),
+    });
+    state.lastSyncAt = new Date().toISOString();
+    saveState();
+    setSyncStatus("Pushed to Google Sheets. Pulling latest...");
+    setTimeout(() => pullSync(false), 1600);
+  } catch {
+    setSyncStatus("Push failed. Check your connection and Sync settings.");
+  } finally {
+    syncInFlight = false;
+  }
+}
+
+async function pullSync(manual) {
+  if (!canSync()) {
+    if (manual) setSyncStatus("Add the Apps Script URL and sync password first.");
+    return;
+  }
+  setSyncStatus("Pulling latest from Google Sheets...");
+  try {
+    const data = await jsonp(`${state.syncUrl}?action=pull&secret=${encodeURIComponent(state.syncSecret)}&ts=${Date.now()}`);
+    if (!data.ok) throw new Error(data.error || "Sync failed");
+    state.entries = mergeEntries(state.entries, normalizeEntries(data.entries || {}));
+    state.lastSyncAt = new Date().toISOString();
+    saveState();
+    render();
+    setSyncStatus(`Synced ${Object.keys(state.entries).length} edited sessions.`);
+  } catch {
+    setSyncStatus("Pull failed. Check the Apps Script deployment URL and password.");
+  }
+}
+
+function canSync() {
+  return Boolean(state.syncUrl && state.syncSecret);
+}
+
+function setSyncStatus(message) {
+  if (elements.syncStatus) elements.syncStatus.textContent = message;
+}
+
+function normalizeSyncUrl(value) {
+  return value.trim().replace(/\?.*$/, "");
+}
+
+function mergeEntries(localEntries, cloudEntries) {
+  const merged = { ...localEntries };
+  Object.entries(cloudEntries).forEach(([id, cloudEntry]) => {
+    const localEntry = merged[id];
+    if (!localEntry || entryTime(cloudEntry) > entryTime(localEntry)) {
+      merged[id] = cloudEntry;
+    }
+  });
+  return merged;
+}
+
+function normalizeEntries(entries) {
+  return Object.fromEntries(Object.entries(entries).map(([id, entry]) => [
+    id,
+    { ...entry, updatedAt: entry.updatedAt || new Date(0).toISOString() },
+  ]));
+}
+
+function entryTime(entry) {
+  return Date.parse(entry.updatedAt || 0) || 0;
+}
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callback = `syncCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    const separator = url.includes("?") ? "&" : "?";
+    window[callback] = (data) => {
+      delete window[callback];
+      script.remove();
+      resolve(data);
+    };
+    script.onerror = () => {
+      delete window[callback];
+      script.remove();
+      reject(new Error("JSONP failed"));
+    };
+    script.src = `${url}${separator}callback=${callback}`;
+    document.body.append(script);
+  });
+}
+
+function getDeviceId() {
+  const key = "comrades2027TrainingCalendarDeviceId";
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+  const value = `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  localStorage.setItem(key, value);
+  return value;
+}
+
+function formatSyncTime(isoDate) {
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(isoDate));
 }
 
 function download(filename, text, type) {
@@ -511,8 +692,9 @@ function escapeHtml(text) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=sync1").then((registration) => registration.update()).catch(() => {});
   }
 }
 
 init();
+setTimeout(() => pullSync(false), 800);
