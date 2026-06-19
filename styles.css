@@ -356,6 +356,10 @@ label textarea {
   background: #f2f6f3;
 }
 
+.calendar-empty {
+  background: #fbfdfb;
+}
+
 .calendar-day time {
   color: var(--muted);
   display: block;
@@ -374,6 +378,10 @@ label textarea {
   padding: 0;
   text-align: left;
   width: 100%;
+}
+
+.calendar-empty button {
+  display: none;
 }
 
 .calendar-day.done {

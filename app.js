@@ -339,8 +339,8 @@ function renderDayCard(row) {
 function renderCalendar() {
   elements.calendarView.innerHTML = "";
   const rows = filteredRows();
-  const months = groupBy(rows, (row) => row.date.slice(0, 7));
-  Object.entries(months).forEach(([month, monthRows]) => {
+  const rowsByDate = groupBy(rows, (row) => row.date);
+  calendarMonths(rows).forEach((month) => {
     const panel = document.createElement("article");
     panel.className = "month-panel";
     panel.innerHTML = `<h3>${monthFormatter.format(localDate(`${month}-01`))}</h3><div class="calendar-grid"></div>`;
@@ -356,25 +356,30 @@ function renderCalendar() {
       blank.className = "calendar-day calendar-blank";
       grid.append(blank);
     }
-    monthRows.forEach((row) => {
+    monthDates(month).forEach((date) => {
+      const row = (rowsByDate[date] || [])[0];
+      const officeDay = Boolean(officeDays[date]);
       const cell = document.createElement("div");
-      cell.className = `calendar-day ${dayClasses(row).join(" ")}`;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = `${row.planned}${row.actualKm ? ` - ${row.actualKm} km` : ""}`;
-      button.addEventListener("click", () => {
-        state.selectedWeek = row.week;
-        state.view = "week";
-        render();
-      });
-      cell.innerHTML = `<time>${localDate(row.date).getDate()}</time>`;
-      if (row.officeDay) {
+      cell.className = `calendar-day ${row ? dayClasses(row).join(" ") : ""} ${officeDay ? "office-day" : ""} ${row ? "" : "calendar-empty"}`;
+      cell.innerHTML = `<time>${localDate(date).getDate()}</time>`;
+      cell.querySelector("time").textContent = localDate(date).getDate();
+      if (officeDay) {
         const badge = document.createElement("span");
         badge.className = "office-badge calendar-office-badge";
         badge.textContent = "Office";
         cell.append(badge);
       }
-      cell.append(button);
+      if (row) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = `${row.planned}${row.actualKm ? ` - ${row.actualKm} km` : ""}`;
+        button.addEventListener("click", () => {
+          state.selectedWeek = row.week;
+          state.view = "week";
+          render();
+        });
+        cell.append(button);
+      }
       grid.append(cell);
     });
     elements.calendarView.append(panel);
@@ -423,6 +428,22 @@ function filteredRows() {
   return allRows().filter((row) => {
     return [row.week, row.date, row.planned, row.phaseNotes, row.notes, row.officeDay ? "office" : ""].join(" ").toLowerCase().includes(query);
   });
+}
+
+function calendarMonths(rows) {
+  const rowMonths = rows.map((row) => row.date.slice(0, 7));
+  const officeMonths = Object.keys(officeDays).map((date) => date.slice(0, 7));
+  return [...new Set([...rowMonths, ...officeMonths])].sort();
+}
+
+function monthDates(month) {
+  const dates = [];
+  const current = localDate(`${month}-01`);
+  while (isoFromLocalDate(current).startsWith(month)) {
+    dates.push(isoFromLocalDate(current));
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
 }
 
 function mergedSession(weekNumber, session) {
@@ -771,7 +792,7 @@ function escapeHtml(text) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js?v=revised1").then((registration) => registration.update()).catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=revised2").then((registration) => registration.update()).catch(() => {});
   }
 }
 
